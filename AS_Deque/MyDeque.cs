@@ -3,8 +3,7 @@
 // Author: Aaron Shingleton, shingletona@etsu.edu
 // Course: CSCI-2210-001 - Data Structures
 // Assignment: Project 3 - Deque
-// Description: Hilariously lobotomized deque data structure that is
-//              a funny amalgam of a stack and a queue.
+// Description: Basic implementation of deque data structure
 //
 ///////////////////////////////////////////////////////////////////////////////
 using System.Collections;
@@ -16,7 +15,7 @@ namespace AS_Deque
         private int _count = 0;
         private T[] internalArray;
         private bool PeekFlag = false;
-        public int Count            // Although not used to insert data, tally of useful elements is used to help with upsizing array.
+        public int Count            // Although not used to insert data, tally of useful elements is used for GetEnumerator()
         {
             get
             {
@@ -39,17 +38,17 @@ namespace AS_Deque
         public object SyncRoot => this;
 
         /// <summary>
-        /// 
+        /// Copies the contents of the deque to a given array starting at provided index.
         /// </summary>
-        /// <param name="array"></param>
-        /// <param name="index"></param>
-        /// <exception cref="NotImplementedException"></exception>
+        /// <param name="array">Array to hold deque contents.</param>
+        /// <param name="index">Starting point of copy in deque.</param>
+        /// <exception cref="ArgumentException">Exception to handle improper sizing of external array.</exception>
         public void CopyTo(Array array, int index)
         {
             try
             {
                 // Transfer front
-                for (int i = 0; i < Count; i++)
+                for (int i = 0; i < FrontLocation; i++)
                 {
                     array.SetValue(internalArray[i], index + i);
                 }
@@ -61,13 +60,57 @@ namespace AS_Deque
             }
             catch (ArgumentException e)
             {
-                Console.WriteLine("Arugment array can not fit contents of deque.");
+                Console.WriteLine("Arugment array can not fit contents of deque or invalid index for deque.");
                 Console.WriteLine(e);
             }
         }
 
+        #region Front Components
+        private int _frontLoc = 0;
+        private int FrontLocation
+        {
+            get { return _frontLoc; }
+            set { _frontLoc = Math.Max(0, value); }
+        }
 
-        #region Queue Components
+        /// <summary>
+        /// Returns the first item at the front of the deque and removes it from the deque.
+        /// </summary>
+        /// <returns>Item at front.</returns>
+        public T? Pop()
+        {
+            PeekFlag = false;
+            Count--;
+            if (FrontLocation == 0) { return default(T); }
+
+            T result = internalArray[0];
+            for (int i = 0; i < FrontLocation; i++)
+            {
+                internalArray[i] = internalArray[i + 1];
+            }
+            FrontLocation--;
+            return result;
+        }
+
+        /// <summary>
+        /// Inserts an item at the front of the deque.
+        /// </summary>
+        /// <param name="item">Item to insert into deque.</param>
+        public void Push(T item)
+        {
+            PeekFlag = false;
+            Count++;
+            internalArray[FrontLocation++] = item;
+            // Resize if next call would overlap
+            if (FrontLocation > BackLocation)
+            {
+                Resize();
+
+            }
+        }
+        #endregion
+
+        #region Back Components
         private int _backLoc;
         private int BackLocation
         {
@@ -109,36 +152,6 @@ namespace AS_Deque
         }
         #endregion
 
-        #region Stack Components
-        private int _frontLoc = 0;
-        private int FrontLocation
-        {
-            get { return _frontLoc; }
-            set { _frontLoc = Math.Max(0, value); }
-        }
-
-        public T? Pop()
-        {
-            PeekFlag = false;
-            Count--;
-            if (FrontLocation == 0) { return default(T); }
-            return internalArray[--FrontLocation];
-        }
-
-        public void Push(T item)
-        {
-            PeekFlag = false;
-            Count++;
-            internalArray[FrontLocation++] = item;
-            // Resize if next call would overlap
-            if (FrontLocation > BackLocation)
-            {
-                Resize();
-
-            }
-        }
-        #endregion
-
         /// <summary>
         /// Returns the item at the start or end of the deque, depending on previous actions with deque. Defaults to front.
         /// </summary>
@@ -166,7 +179,10 @@ namespace AS_Deque
             PeekFlag = peekBack;
             return Peek();
         }
-
+        /// <summary>
+        /// Returns enumerator such that front queue and back queue return in pop/dequeue order.
+        /// </summary>
+        /// <returns>Enumerator pointing to proper element</returns>
         public IEnumerator GetEnumerator()
         {
             for (int i = 0, j = internalArray.Length - 1; i <= Count; i++)
@@ -176,7 +192,7 @@ namespace AS_Deque
             }
         }
         /// <summary>
-        /// Expands deque to fit larger size. Automatically called when pushing/enqueueing and overlap would occur with previously inserted elements.
+        /// Expands deque to fit larger size. Automatically called when pushing/enqueueing and overlap would occur with next insertion of elements.
         /// </summary>
         public bool Resize()
         {

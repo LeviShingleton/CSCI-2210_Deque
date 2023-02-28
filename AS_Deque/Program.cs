@@ -6,31 +6,56 @@
 // Description: Program to demonstrate implementation of deque data structure
 //
 ///////////////////////////////////////////////////////////////////////////////
+using System.Diagnostics;
+
 namespace AS_Deque
 {
     internal class Program
     {
+        #region Global Vars
+        const string hr = "================================================";
+        static MyDeque<int> Deque = new MyDeque<int>();
+        #endregion
         static void Main(string[] args)
         {
-            MyDeque<int> deque = new MyDeque<int>();
+            
 
             // A.Inserting Data
             for (int i = 0; i < 6; i++)
             {
-                deque.Push(i);
+                Deque.Push(i);
             }
             for (int i = 6; i < 11; i++)
             {
-                deque.Enqueue(i);
+                Deque.Enqueue(i);
             }
-            foreach (int num in deque)
-                Console.WriteLine(num);
+
+            PrintDeque();
 
             // A.Peeking
-            Console.WriteLine($"{deque.Peek(false)} is at the start, and {deque.Peek(true)} is at the end.");
+            Console.WriteLine($"{Deque.Peek(false)} is at the start of the deque, and {Deque.Peek(true)} is at the end of the deque.\n\n");
 
             // A.Removing Data
+            Console.WriteLine($"Removing data - first 3 of each\n{hr}");
 
+            for (int i = 0; i < 3; i++)
+            {
+                Console.WriteLine($"Front: {Deque.Pop()}    Back : {Deque.Dequeue()}");
+            }
+
+            PrintDeque();
+
+            Console.WriteLine($"The deque is actually larger than size {Deque.Count}, but filler zeroes from resizing (def. 10) are ignored.");
+        }
+        static void PrintDeque()
+        {
+            Console.WriteLine(hr);
+
+            Console.WriteLine("Data in deque");
+            foreach (int num in Deque)
+                Console.WriteLine(num);
+
+            Console.WriteLine(hr);
         }
     }
 }
