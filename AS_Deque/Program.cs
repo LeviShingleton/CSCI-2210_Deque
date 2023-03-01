@@ -21,11 +21,11 @@ namespace AS_Deque
             
 
             // A.Inserting Data
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 10; i++)
             {
                 Deque.Push(i);
             }
-            for (int i = 6; i < 11; i++)
+            for (int i = 10; i < 20; i++)
             {
                 Deque.Enqueue(i);
             }

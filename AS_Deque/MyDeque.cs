@@ -135,20 +135,22 @@ namespace AS_Deque
         }
         /// <summary>
         /// Adds an item to the back of the deque. 
-        /// FIXME: Does not work with a loop that would cause overlap between the front and back ends of the deque.
         /// </summary>
         /// <param name="item">The item to be inserted at the back of the deque.</param>
         public void Enqueue(T item)
         {
             PeekFlag = true;
-            Count++;
-            internalArray[BackLocation--] = item;
+            
+            
 
             // Resize if overlap would occur b/w front and back on next call
             if (FrontLocation > BackLocation)
             {
                 Resize();
             }
+
+            Count++;
+            internalArray[BackLocation--] = item;
         }
         #endregion
 
@@ -194,23 +196,45 @@ namespace AS_Deque
         /// <summary>
         /// Expands deque to fit larger size. Automatically called when pushing/enqueueing and overlap would occur with next insertion of elements.
         /// </summary>
+        // FIXME: Always propagates last index to extended last index, even if the front "owns" the current end.
         public bool Resize()
         {
             T[] temp = new T[internalArray.Length * 2];
-
-            for (int i = 0; i < FrontLocation; i++)
-            {
-                temp[i] = internalArray[i];
-            }
-
             int tempQueuePlacer = temp.Length - 1;
-            for (int i = internalArray.Length - 1; i >= BackLocation; i--)
+
+            
+
+            if (PeekFlag) // Last insertion was from back
             {
-                temp[tempQueuePlacer--] = internalArray[i];
+                // Move all items including BackLocation to the back of temp array
+                for (int i = 0; i < FrontLocation; i++)
+                {
+                    temp[i] = internalArray[i];
+                }
+
+                for (int i = internalArray.Length - 1; i >= BackLocation; i--)
+                {
+                    temp[tempQueuePlacer--] = internalArray[i];
+                }
             }
+            else          // Last insertion was from front
+            {
+                // Move all items except or BackLocation (which == FrontLocation at this point) to the end of temp array
+                for (int i = 0; i < FrontLocation; i++)
+                {
+                    temp[i] = internalArray[i];
+                }
+
+                for (int i = internalArray.Length - 1; i > BackLocation; i--)
+                {
+                    temp[tempQueuePlacer--] = internalArray[i];
+                }
+            }
+
+            int tmpBack = (temp.Length - 1) - ((internalArray.Length - 1) - BackLocation); // BackLocation = new length - # of jumps in previous size
 
             internalArray = temp;
-            BackLocation = internalArray.Length - BackLocation;
+            BackLocation = tmpBack;
             return true;
         }
         
